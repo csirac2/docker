@@ -613,6 +613,22 @@ RUN    pwd
 	{
 		[][2]string{{"Dockerfile", `
 FROM   {IMAGE}
+RUN    pwd
+`}},
+		[]string{//Do the same thing as before - thus the cache is used
+			"Step 1 : FROM ", //83599e29c455eb719f77d799bc7c51521b9551972f5a850d7ad265bc1b5292f6",
+			" ---> ",         //83599e29c455",
+			"Step 2 : RUN pwd",
+			" ---> Using cache",
+			" ---> ",              //364446ad8316",
+			"Successfully built ", //38d2752ee668",
+			"Removing intermediate container ", //cb2637d54db5",
+		},
+		[]string{"-rm", "{TMPDIR}"},
+	},
+	{
+		[][2]string{{"Dockerfile", `
+FROM   {IMAGE}
 ADD    password /
 RUN    ls | grep p
 `},
@@ -636,6 +652,8 @@ george:george
 }
 
 // TestSimpleBuild checks that 'docker build /tmp/randome-test-dir' builds a container
+//TODO: modify this so it uses reflection to call the right command?
+//TODO: also get the main options used?
 func TestBuildCommandLine(t *testing.T) {
 	stdout, stdoutPipe := io.Pipe()
 
@@ -686,7 +704,7 @@ func TestBuildCommandLine(t *testing.T) {
 			//ignore any other strings
 		})
 
-		setTimeout(t, "CmdRun timed out", 4*time.Second, func() {
+		setTimeout(t, "CmdRun timed out", 6*time.Second, func() {
 			<-c
 		})
 	}
