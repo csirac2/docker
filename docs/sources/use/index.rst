@@ -13,6 +13,7 @@ Contents:
    :maxdepth: 1
 
    basics
+   run
    builder
    workingwithrepository
    baseimages
