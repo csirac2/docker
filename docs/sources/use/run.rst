@@ -32,11 +32,103 @@ Running
 
   docker run [OPTIONS] IMAGE[:TAG] [COMMAND] [ARG...]
 
+      -cidfile="": Write the container ID to the file
+      -d=false: Detached mode: Run container in the background, print new container id
+      -h="": Container host name
+      -rm=false: Automatically remove the container when it exits (incompatible with -d)
+      -name="": Assign the specified name to the container. 
+         If no name is specific docker will generate a random name
+
+
 TODO:
 Go through all the OPTIONS and group them according to what they set:
 # parameters inside the container
 # parameters outside the container
 # connections between containers
+
+Not affected by ``dotcloud run`` parameters: FROM, MAINTAINER, RUN, ADD
+
+Performance
+-----------
+
+::
+
+   -c=0 : CPU shares (relative weight)
+   -m="": Memory limit (format: <number><optional unit>, where unit = b, k, m or g)
+
+   -lxc-conf=[]: Add custom lxc options -lxc-conf="lxc.cgroup.cpuset.cpus = 0,1"
+   -privileged=false: Give extended privileges to this container
+
+User IO
+-------
+
+::
+
+   -a=map[]       : Attach to stdin, stdout or stderr
+   -i=false       : Keep stdin open even if not attached
+   -t=false       : Allocate a pseudo-tty
+   -sig-proxy=true: Proxify all received signal to the process (even in non-tty mode)
+
+CMD
+---
+
+::
+
+   COMMAND [ARG...]
+
+EXPOSE
+------
+
+::
+
+   -n=true   : Enable networking for this container
+   -p=[]     : Map a network port to the container
+   -expose=[]: Expose a port from the container without publishing it to your host
+   -link=""  : Add link to another container (name:alias)
+   -P=false  : Publish all exposed ports to the host interfaces
+   -dns=[]   : Set custom dns servers for the container
+
+Not sure about the "link" as something that overrides EXPOSE. It works with it, but does it override it?
+
+ENV
+---
+
+::
+
+   -e=[]     : Set environment variables
+   -link=""  : Add link to another container (name:alias)
+
+Linking also sets environment variables.
+
+ENTRYPOINT
+----------
+
+::
+
+   -entrypoint="": Overwrite the default entrypoint set by the image
+
+VOLUME
+------
+
+::
+
+   -v=[]: Create a bind mount with: [host-dir]:[container-dir]:[rw|ro]. 
+          If "container-dir" is missing, then docker creates a new volume.
+   -volumes-from="": Mount all volumes from the given container(s)
+
+USER
+----
+
+::
+
+   -u="": Username or UID
+
+WORKDIR
+-------
+
+::
+
+   -w="": Working directory inside the container
 
 .. _run_metrics:
 
