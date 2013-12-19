@@ -34,10 +34,7 @@ Running
 
       -cidfile="": Write the container ID to the file
       -d=false: Detached mode: Run container in the background, print new container id
-      -h="": Container host name
       -rm=false: Automatically remove the container when it exits (incompatible with -d)
-      -name="": Assign the specified name to the container. 
-         If no name is specific docker will generate a random name
 
 
 TODO:
@@ -46,7 +43,7 @@ Go through all the OPTIONS and group them according to what they set:
 # parameters outside the container
 # connections between containers
 
-Not affected by ``dotcloud run`` parameters: FROM, MAINTAINER, RUN, ADD
+Not affected by ``docker run`` parameters: FROM, MAINTAINER, RUN, ADD
 
 Performance
 -----------
@@ -88,7 +85,8 @@ EXPOSE
    -P=false  : Publish all exposed ports to the host interfaces
    -dns=[]   : Set custom dns servers for the container
 
-Not sure about the "link" as something that overrides EXPOSE. It works with it, but does it override it?
+Not sure about the "link" as something that overrides EXPOSE. It works
+with it, but does it override it?
 
 ENV
 ---
@@ -97,8 +95,13 @@ ENV
 
    -e=[]     : Set environment variables
    -link=""  : Add link to another container (name:alias)
+   -name=""  : Assign the specified name to the container. 
+                 If no name is specific docker will generate a random name
+   -h=""     : Container host name
 
-Linking also sets environment variables.
+
+Linking also sets environment variables. Strangely, the name doesn't
+show up in the environment, so a container doesn't know its own name.
 
 ENTRYPOINT
 ----------
