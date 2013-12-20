@@ -10,61 +10,84 @@ Run Docker Containers
 
 **Docker runs processes in isolated containers**.  Executing ``docker
 run`` starts a process with its own file system, its own networking,
-and its own isolated process tree. The :ref:`image_def` which starts the
-process may define many defaults related to which binary to run, what
-networking to expose, and more, but ``docker run`` also provides the
-operator many tools for overriding or otherwise specifying runtime
-behavior. That's the main reason :ref:`cli_run` has more OPTIONS than
-any other ``docker`` command.
+and its own isolated process tree. The :ref:`image_def` which starts
+the process may define defaults related to the binary to run, the
+networking to expose, and more, but ``docker run`` gives final control
+to the operator who starts the container from the image. That's the
+main reason :ref:`cli_run` has more OPTIONS than any other ``docker``
+command.
 
-We give many :ref:`example_list` which include running containers, and
-so here we try to give more in-depth guidance as well as information
-on how to gather LXC and Docker container metrics.
+Every one of the :ref:`example_list` shows running containers, and so
+here we try to give more in-depth guidance as well as information on
+how to gather LXC and Docker container metrics.
 
 .. contents:: Table of Contents
 
 .. _run_running:
 
-Running
+Options
 =======
 
-::
+As you've seen in the :ref:`example_list`, the basic `run` command takes this form::
 
   docker run [OPTIONS] IMAGE[:TAG] [COMMAND] [ARG...]
 
-      -cidfile="": Write the container ID to the file
-      -d=false: Detached mode: Run container in the background, print new container id
-      -rm=false: Automatically remove the container when it exits (incompatible with -d)
+The list of ``[OPTIONS]`` breaks down into two groups: options that
+define the runtime behavior or environment, and options that override
+image defaults. The image defaults usually get set in
+:ref:`Dockerfiles <dockerbuilder>` (though they could also be set at
+:ref:cli_commit time too), so we will group them by their related
+Dockerfile commands. We'll start, though, with the options that are
+unique to ``docker run``, the options which define the runtime
+behavior or container environment.
 
+Detached or Foreground
+----------------------
 
-TODO:
-Go through all the OPTIONS and group them according to what they set:
-# parameters inside the container
-# parameters outside the container
-# connections between containers
+First you have to decide if you want to run the container in the
+background in a "detached" mode or in the default foreground mode::
 
-Not affected by ``docker run`` parameters: FROM, MAINTAINER, RUN, ADD
+   -d=false: Detached mode: Run container in the background, print new container id
 
-Performance
------------
+In detached mode (``-d=true`` or just ``-d``), all IO should be done
+through network connections or shared volumes -- the container is no
+longer listening to the commandline where you executed ``docker
+run``. You can reattach to a detached container with :ref:cli_attach.
 
-::
+In foreground mode (the default), ``docker run`` can start the process
+in the container and attach the console to the process's standard
+input, output, and standard error. It can even pretend to be a TTY
+(this is what most commandline executables expect) and pass along
+signals. All of that is configurable::
 
-   -c=0 : CPU shares (relative weight)
-   -m="": Memory limit (format: <number><optional unit>, where unit = b, k, m or g)
-
-   -lxc-conf=[]: Add custom lxc options -lxc-conf="lxc.cgroup.cpuset.cpus = 0,1"
-   -privileged=false: Give extended privileges to this container
-
-User IO
--------
-
-::
-
-   -a=map[]       : Attach to stdin, stdout or stderr
+   -a=map[]       : Attach to stdin, stdout and/or stderr
    -i=false       : Keep stdin open even if not attached
    -t=false       : Allocate a pseudo-tty
    -sig-proxy=true: Proxify all received signal to the process (even in non-tty mode)
+
+If you just specify ``-a`` then Docker will `attach everything 
+
+Then, if you'd like Docker to automatically clean up the container and
+remove the file system when the container exits, you can add the -rm
+flag::
+
+   -rm=false: Automatically remove the container when it exits (incompatible with -d)
+
+And finally, to help with automation, you can have Docker write the
+container id out to a file of your choosing, similar to how some
+programs might write out their process ID to a file (you've seen them
+as .pid files)::
+
+      -cidfile="": Write the container ID to the file
+
+
+Overiding Image Defaults
+========================
+
+Four of the Dockerfile commands cannot be overridden at runtime:
+``FROM, MAINTAINER, RUN``, and ``ADD``. Everything else has a
+corresponding override in ``docker run``.
+
 
 CMD
 ---
@@ -72,6 +95,14 @@ CMD
 ::
 
    COMMAND [ARG...]
+
+
+ENTRYPOINT
+----------
+
+::
+
+   -entrypoint="": Overwrite the default entrypoint set by the image
 
 EXPOSE
 ------
@@ -103,13 +134,6 @@ ENV
 Linking also sets environment variables. Strangely, the name doesn't
 show up in the environment, so a container doesn't know its own name.
 
-ENTRYPOINT
-----------
-
-::
-
-   -entrypoint="": Overwrite the default entrypoint set by the image
-
 VOLUME
 ------
 
@@ -132,6 +156,17 @@ WORKDIR
 ::
 
    -w="": Working directory inside the container
+
+Performance
+-----------
+
+::
+
+   -c=0 : CPU shares (relative weight)
+   -m="": Memory limit (format: <number><optional unit>, where unit = b, k, m or g)
+
+   -lxc-conf=[]: Add custom lxc options -lxc-conf="lxc.cgroup.cpuset.cpus = 0,1"
+   -privileged=false: Give extended privileges to this container
 
 .. _run_metrics:
 
