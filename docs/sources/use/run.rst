@@ -65,7 +65,7 @@ signals. All of that is configurable::
    -t=false       : Allocate a pseudo-tty
    -sig-proxy=true: Proxify all received signal to the process (even in non-tty mode)
 
-If you just specify ``-a`` then Docker will `attach everything 
+If you just specify ``-a`` then Docker will attach everything 
 
 Then, if you'd like Docker to automatically clean up the container and
 remove the file system when the container exits, you can add the -rm
