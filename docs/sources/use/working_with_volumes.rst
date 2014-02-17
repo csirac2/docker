@@ -7,10 +7,6 @@
 Share Directories via Volumes
 =============================
 
-.. versionadded:: v0.3.0
-   Data volumes have been available since version 1 of the
-   :doc:`../reference/api/docker_remote_api`
-
 A *data volume* is a specially-designated directory within one or more
 containers that bypasses the :ref:`ufs_def` to provide several useful
 features for persistent or shared data:
@@ -24,8 +20,13 @@ features for persistent or shared data:
 * **Changes to a data volume will not be included at the next commit**
   because they are not recorded as regular filesystem changes in the
   top layer of the :ref:`ufs_def`
+* **Volumes persist until no containers use them** as they are a reference
+  counted resource. The container does not need to be running to share its
+  volumes, but running it can help protect it against ``docker rm``.
 
 Each container can have zero or more data volumes.
+
+.. versionadded:: v0.3.0
 
 Getting Started
 ...............
@@ -40,7 +41,7 @@ two new volumes::
 This command will create the new container with two new volumes that 
 exits instantly (``true`` is pretty much the smallest, simplest program 
 that you can run). Once created you can mount its volumes in any other 
-container using the ``-volumes-from`` option; irrespecive of whether the
+container using the ``-volumes-from`` option; irrespective of whether the
 container is running or not. 
 
 Or, you can use the VOLUME instruction in a Dockerfile to add one or more new
@@ -80,7 +81,7 @@ similar to :ref:`ambassador_pattern_linking <ambassador_pattern_linking>`.
 
 If you remove containers that mount volumes, including the initial DATA container, 
 or the middleman, the volumes will not be deleted until there are no containers still
-referencing those volumes. This allows you to upgrade, or effectivly migrate data volumes
+referencing those volumes. This allows you to upgrade, or effectively migrate data volumes
 between containers.
 
 Mount a Host Directory as a Container Volume:
@@ -117,6 +118,28 @@ virtual machine then launches docker commands on behalf of the OS/X command line
 directories`` refer to directories in the ``boot2docker`` virtual machine, not the OS/X filesystem.
 
 Similarly, anytime when the docker daemon is on a remote machine, the ``host directories`` always refer to directories on the daemon's machine.
+
+Backup, restore, or migrate data volumes
+----------------------------------------
+
+Because data volumes are external to images, you cannot back them up using ``docker export`` and 
+``docker cp``. Instead, you can use ``--volumes-from``. For example:
+
+    docker run -rm --volumes-from DATA -v $(pwd):/backup busybox tar cvf /backup/backup.tar /data
+
+and then to restore to the same container, or another that you've made elsewhere, 
+
+    $ docker run -t -i -v /data -name DATA2 busybox sh
+    $ docker run -rm --volumes-from DATA2 -t -i -v $(pwd):/backup busybox tar xvf /backup/backup.tar
+    data/
+    data/sven.txt
+    $ docker run -rm --volumes-from DATA -t -i -v `pwd`:/backup busybox sh
+    / # ls data
+    sven.txt
+
+
+You can use the basic techniques above to automate backup, migration and restore
+testing using your preferred tools.
 
 Known Issues
 ............
